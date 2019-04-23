@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
 	public GameObject tailPrefab;
 	public GameObject foodPrefab;
 
-	public float globalScale;
+	public float gridItemSize;
 
 	private int gameSize = 17;
 	private int marginLeftSize = 1;
@@ -28,7 +28,7 @@ public class GameManager : MonoBehaviour
 	private float mostTop;
 	private float mostBottom;
 
-	private Snake snake;
+	public GameObject player;
 
 	void Awake()
 	{
@@ -48,16 +48,19 @@ public class GameManager : MonoBehaviour
 		CreateWalls();
 		CreatePlayer();
 		SpawnFood();
-		snake = FindObjectOfType<Snake>();
 	}
 
 	void Update()
 	{
-		if(Input.GetKey(KeyCode.RightArrow) ||
-			Input.GetKey(KeyCode.DownArrow) ||
-			Input.GetKey(KeyCode.LeftArrow) ||
-			Input.GetKey(KeyCode.UpArrow)) {
-			snake.SendMessage("StartMoving");
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Application.Quit();
+		}
+
+		if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.DownArrow) ||
+			Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.UpArrow))
+		{
+			player.SendMessage("StartMoving");
 		}
 	}
 
@@ -69,32 +72,34 @@ public class GameManager : MonoBehaviour
 
 			screenWidth = rUCorner.x * 2;
 			screenHeight = rUCorner.y * 2;
-			globalScale = screenWidth / (gameSize + marginLeftSize * 2);
-			halfBrickSize = globalScale / 2;
 
-			mostLeft = lDCorner.x + halfBrickSize;
-			mostRight = rUCorner.x - halfBrickSize;
+			gridItemSize = screenWidth / (gameSize + marginLeftSize * 2);
+			halfBrickSize = gridItemSize / 2;
 
-			mostTop = rUCorner.y - halfBrickSize - globalScale * marginTopSize;
-			mostBottom = mostTop - globalScale * (gameSize + 1);
+			mostRight = (gameSize + marginLeftSize) / 2 * gridItemSize;
+			mostLeft = -mostRight;
+
+			mostTop = rUCorner.y - halfBrickSize - gridItemSize * marginTopSize;
+			mostBottom = mostTop - gridItemSize * (gameSize + 1);
 		}
 	}
 
 	void ScalePrefabs() {
-		brickPrefab.transform.localScale = new Vector3(globalScale, globalScale, 0);
-		playerPrefab.transform.localScale = new Vector3(globalScale, globalScale, 0);
-		foodPrefab.transform.localScale = new Vector3(globalScale, globalScale, 0);
-		tailPrefab.transform.localScale = new Vector3(globalScale * 0.7f, globalScale * 0.7f, 0);
+		brickPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		playerPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		foodPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		tailPrefab.transform.localScale = new Vector3(gridItemSize * 0.7f, gridItemSize * 0.7f, 0);
 	}
 
 	void CreateWalls()
 	{
-		for (float x = mostLeft; x <= mostRight; x += globalScale) {
+		for (float x = mostLeft; x <= mostRight + 1; x += gridItemSize) // +1 -> weird bug where == is not good
+		{
 			Instantiate(brickPrefab, new Vector2(x, mostTop), Quaternion.identity);
 			Instantiate(brickPrefab, new Vector2(x, mostBottom), Quaternion.identity);
 		}
 
-		for (float y = mostBottom; y <= mostTop; y += globalScale)
+		for (float y = mostTop; y >= mostBottom; y -= gridItemSize)
 		{
 			Instantiate(brickPrefab, new Vector2(mostLeft, y), Quaternion.identity);
 			Instantiate(brickPrefab, new Vector2(mostRight, y), Quaternion.identity);
@@ -102,16 +107,21 @@ public class GameManager : MonoBehaviour
 	}
 
 	void CreatePlayer() {
-		Instantiate(playerPrefab, new Vector2((mostRight + mostLeft) / 2, (mostTop + mostBottom) / 2), Quaternion.identity);
+		player = Instantiate(playerPrefab, new Vector2((mostRight + mostLeft) / 2, (mostTop + mostBottom) / 2), Quaternion.identity);
 	}
 
 	public void SpawnFood() {
 		float x = (int)Random.Range(1, gameSize);
 		float y = (int)Random.Range(1, gameSize);
 
-		x = mostLeft + x * globalScale;
-		y = mostBottom + y * globalScale;
+		x = mostLeft + x * gridItemSize;
+		y = mostBottom + y * gridItemSize;
 
 		Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity);
+	}
+
+	public void ExitGame()
+	{
+		Application.Quit();
 	}
 }

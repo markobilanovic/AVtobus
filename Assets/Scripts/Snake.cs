@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class Snake : MonoBehaviour {
+
+	float speed = 1;
+
 	bool gameStarted = false;
 
 	bool ate = false;
@@ -17,7 +20,7 @@ public class Snake : MonoBehaviour {
 	AudioSource crashSound;
 	AudioSource biteSound;
 
-	Vector2 dir = Vector2.right;
+	Vector2 dir;
 
 	List<Transform> tail = new List<Transform>();
 	List<GameObject> tailObjects = new List<GameObject>();
@@ -29,9 +32,18 @@ public class Snake : MonoBehaviour {
 	}
 
 	public void StartMoving() {
-		if(gameStarted == false) {
+		if(!gameStarted)
+		{
 			gameStarted = true;
 			InvokeRepeating("Move", 0, 0.1f);
+		}
+	}
+
+	public void StopMoving()
+	{
+		if (gameStarted)
+		{
+			gameStarted = false;
 		}
 	}
 
@@ -50,11 +62,7 @@ public class Snake : MonoBehaviour {
 
 		} else {
 			if (Input.GetKey(KeyCode.R)){
-				tailObjects.ForEach((g) =>
-				{
-					Destroy(g);
-				});
-
+				tailObjects.ForEach((g) => { Destroy(g); });
 				tail.Clear();
 				transform.position = new Vector3(0, 0, 0);
 				isDied = false;
@@ -63,7 +71,7 @@ public class Snake : MonoBehaviour {
 	}
 
 	void Move() {
-		if (!isDied) {
+		if (!isDied && dir != null) {
 			Vector2 v = transform.position;
 			transform.Translate (dir);
 
@@ -80,6 +88,34 @@ public class Snake : MonoBehaviour {
 				tail.RemoveAt(tail.Count - 1);
 			}
 		}
+	}
+
+	public void GoUp()
+	{
+		StartMoving();
+		Vector3 scale = transform.localScale;
+		dir = Vector2.up * scale;
+	}
+
+	public void GoDown()
+	{
+		StartMoving();
+		Vector3 scale = transform.localScale;
+		dir = Vector2.down * scale;
+	}
+
+	public void GoLeft()
+	{
+		StartMoving();
+		Vector3 scale = transform.localScale;
+		dir = Vector2.left * scale;
+	}
+
+	public void GoRight()
+	{
+		StartMoving();
+		Vector3 scale = transform.localScale;
+		dir = Vector2.right * scale;
 	}
 
 	void OnTriggerEnter2D(Collider2D coll) {
