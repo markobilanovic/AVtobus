@@ -7,16 +7,6 @@ public class GameManager : MonoBehaviour
 {
 	public static GameManager Instance;
 
-	//public static GameManager Instance {
-	//	get {
-	//		if (_instance == null) {
-	//			_instance = new GameManager();
-	//		}
-	//		return _instance;
-	//	}
-	//}
-
-
 	public Camera m_OrthographicCamera;
 
 	public GameObject brickPrefab;
