@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: fd8c4f1900f5d5b498422226271231ad
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_OrthographicCamera: {instanceID: 0}
+  - brickPrefab: {fileID: 5390638958897956219, guid: 258ea70ccf9c34a45b27db42ca0c02be,
+      type: 3}
+  - playerPrefab: {fileID: 676862970, guid: 57e884d135f66a94f94b8b7ba1369821, type: 3}
+  - tailPrefab: {fileID: 101184, guid: f8137807577d5f949bb11cb4b88adbae, type: 3}
+  - foodPrefab: {fileID: 173352, guid: aa76f3b15f8ce404b92ce09b120f8ee9, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
