@@ -29,6 +29,10 @@ public class GameManager : MonoBehaviour
 	private float mostBottom;
 
 	public GameObject player;
+	private GameObject food;
+
+	private Sprite[] sprites;
+	public GameObject optionsMenu;
 
 	void Awake()
 	{
@@ -40,6 +44,7 @@ public class GameManager : MonoBehaviour
 
 		DontDestroyOnLoad(gameObject);
 		InitGame();
+		sprites = Resources.LoadAll<Sprite>("PlayerSprites");
 	}
 
 	void InitGame() {
@@ -52,11 +57,6 @@ public class GameManager : MonoBehaviour
 
 	void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.Escape))
-		{
-			Application.Quit();
-		}
-
 		if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.DownArrow) ||
 			Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.UpArrow))
 		{
@@ -117,11 +117,21 @@ public class GameManager : MonoBehaviour
 		x = mostLeft + x * gridItemSize;
 		y = mostBottom + y * gridItemSize;
 
-		Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity);
+		food = Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity);
 	}
 
-	public void ExitGame()
+	public void GameOver() {
+		optionsMenu.SetActive(true);
+	}
+
+	public void Reset()
 	{
-		Application.Quit();
+		optionsMenu.SetActive(false);
+		player.SendMessage("DestroyPlayer");
+		Destroy(player);
+		Destroy(food);
+
+		CreatePlayer();
+		SpawnFood();
 	}
 }

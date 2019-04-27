@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class Snake : MonoBehaviour {
-
-	float speed = 1;
+public class Player : MonoBehaviour {
 
 	bool gameStarted = false;
 
@@ -15,12 +13,12 @@ public class Snake : MonoBehaviour {
 
 	public GameObject tailPrefab;
 
-	public GameObject foodPrefab;
-
 	AudioSource crashSound;
 	AudioSource biteSound;
 
 	Vector2 dir;
+	float speed = 1;
+	float playerScale = 1;
 
 	List<Transform> tail = new List<Transform>();
 	List<GameObject> tailObjects = new List<GameObject>();
@@ -31,12 +29,25 @@ public class Snake : MonoBehaviour {
 		biteSound = audioSources[1];
 	}
 
+	public float PlayerScale {
+		get
+		{
+			return GameManager.Instance.gridItemSize;
+		}
+	}
+
 	public void StartMoving() {
 		if(!gameStarted)
 		{
 			gameStarted = true;
-			InvokeRepeating("Move", 0, 0.1f);
+			InvokeRepeating("Move", 0, 0.2f);
 		}
+	}
+
+	public void ChangeSpeed(float speed)
+	{
+		CancelInvoke("Move");
+
 	}
 
 	public void StopMoving()
@@ -70,6 +81,21 @@ public class Snake : MonoBehaviour {
 		}
 	}
 
+	public void DestroyPlayer()
+	{
+		tailObjects.ForEach((g) => { Destroy(g); });
+		tail.Clear();
+	}
+
+	public void StartNew()
+	{
+		tailObjects.ForEach((g) => { Destroy(g); });
+		tail.Clear();
+		transform.position = new Vector3(0, 0, 0);
+		dir = new Vector2(0, 0);
+		isDied = false;
+	}
+
 	void Move() {
 		if (!isDied && dir != null) {
 			Vector2 v = transform.position;
@@ -90,32 +116,10 @@ public class Snake : MonoBehaviour {
 		}
 	}
 
-	public void GoUp()
+	public void SetDirection(Vector2 direction)
 	{
 		StartMoving();
-		Vector3 scale = transform.localScale;
-		dir = Vector2.up * scale;
-	}
-
-	public void GoDown()
-	{
-		StartMoving();
-		Vector3 scale = transform.localScale;
-		dir = Vector2.down * scale;
-	}
-
-	public void GoLeft()
-	{
-		StartMoving();
-		Vector3 scale = transform.localScale;
-		dir = Vector2.left * scale;
-	}
-
-	public void GoRight()
-	{
-		StartMoving();
-		Vector3 scale = transform.localScale;
-		dir = Vector2.right * scale;
+		dir = direction * PlayerScale;
 	}
 
 	void OnTriggerEnter2D(Collider2D coll) {
@@ -134,6 +138,8 @@ public class Snake : MonoBehaviour {
 		crashSound.Play();
 		isDied = true;
 		gameStarted = false;
+		dir = new Vector2(0, 0);
+		GameManager.Instance.GameOver();
 	}
 
 }
