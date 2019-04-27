@@ -9,7 +9,7 @@ public class Player : MonoBehaviour {
 
 	bool ate = false;
 
-	bool isDied = false;
+	bool isDead = false;
 
 	public GameObject tailPrefab;
 
@@ -40,6 +40,7 @@ public class Player : MonoBehaviour {
 		if(!gameStarted)
 		{
 			gameStarted = true;
+			GameManager.Instance.GameStarted();
 			InvokeRepeating("Move", 0, 0.2f);
 		}
 	}
@@ -50,18 +51,9 @@ public class Player : MonoBehaviour {
 
 	}
 
-	public void StopMoving()
-	{
-		if (gameStarted)
-		{
-			gameStarted = false;
-		}
-	}
-
 	// todo: delete - only for debugging
 	void Update () {
-		if (!isDied) {
-			Vector3 scale = transform.localScale;
+		if (!isDead) {
 			if (Input.GetKey (KeyCode.RightArrow))
 			{
 				SetDirection(Vector2.right);
@@ -88,56 +80,70 @@ public class Player : MonoBehaviour {
 		Destroy(this.gameObject);
 	}
 
-	public void StartNew()
-	{
-		tailObjects.ForEach((g) => { Destroy(g); });
-		tail.Clear();
-		transform.position = new Vector3(0, 0, 0);
-		direction = new Vector2(0, 0);
-		isDied = false;
-	}
-
 	void Move() {
 		Vector2 v = transform.position;
 		transform.Translate(direction);
 
-		if (ate) {
-			GameObject g = (GameObject)Instantiate (tailPrefab, v, Quaternion.identity);
-			tail.Insert (0, g.transform);
+		if (ate)
+		{
+			GameObject g = (GameObject)Instantiate(tailPrefab, v, Quaternion.identity);
+			tail.Insert(0, g.transform);
 			tailObjects.Insert(0, g);
 			ate = false;
-		} else if (tail.Count > 0) {
+		}
+		else if (tail.Count > 0)
+		{
 			tail.Last().position = v;
 			tail.Insert(0, tail.Last());
 			tail.RemoveAt(tail.Count - 1);
 		}
 	}
 
-	public void SetDirection(Vector2 direction)
+	public void SetDirection(Vector2 newDirection)
 	{
-		Vector2 dir = this.direction / PlayerScale;
-		Debug.Log(dir);
-		if ((dir == Vector2.up && direction == Vector2.down) ||
-			(dir == Vector2.down && direction == Vector2.up) ||
-			(dir == Vector2.left && direction == Vector2.right) ||
-			(dir == Vector2.right && direction == Vector2.left))
+		if (!isDead)
 		{
-			Die();
-		}
-		else
-		{
-			StartMoving();
-			this.direction = direction * PlayerScale;
+			Vector2 dir = this.direction / PlayerScale;
+			if ((dir == Vector2.up && newDirection == Vector2.down) ||
+				(dir == Vector2.down && newDirection == Vector2.up) ||
+				(dir == Vector2.left && newDirection == Vector2.right) ||
+				(dir == Vector2.right && newDirection == Vector2.left))
+			{
+				Die();
+			}
+			else
+			{
+				StartMoving();
+				this.direction = newDirection * PlayerScale;
+			}
 		}
 	}
 
 	void OnTriggerEnter2D(Collider2D coll) {
-		if (coll.name.StartsWith("Food")) {
+		if (coll.name.StartsWith("Food"))
+		{
 			biteSound.Play();
 			ate = true;
 			Destroy(coll.gameObject);
-			GameManager.Instance.SpawnFood();
-		} else {
+			GameManager.Instance.PlayerAteFood();
+		}
+		else if (coll.name.StartsWith("Brze"))
+		{
+			Destroy(coll.gameObject);
+			CancelInvoke("Move");
+			InvokeRepeating("Move", 0, 0.1f);
+		}
+		else if (coll.name.StartsWith("Jace"))
+		{
+
+		}
+		else if (coll.name.StartsWith("Bolje"))
+		{
+			Destroy(coll.gameObject);
+			GameManager.Instance.ShowTroll();
+		}
+		else
+		{
 			Die();
 		}
 	}
@@ -145,11 +151,11 @@ public class Player : MonoBehaviour {
 
 	void Die() {
 		crashSound.Play();
-		isDied = true;
+		isDead = true;
 		gameStarted = false;
 		direction = new Vector2(0, 0);
 		CancelInvoke("Move");
-		GameManager.Instance.GameOver();
+		GameManager.Instance.PlayerDied();
 	}
 
 }

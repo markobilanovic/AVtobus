@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,6 +17,7 @@ public class GameManager : MonoBehaviour
 	public GameObject brzePrefab;
 	public GameObject jacePrefab;
 	public GameObject boljePrefab;
+	public GameObject trollPrefab;
 
 	public float gridItemSize;
 
@@ -34,10 +36,15 @@ public class GameManager : MonoBehaviour
 	public GameObject player;
 	private GameObject food;
 
-	private List<GameObject> powerUps;
+	private GameObject powerUp = null;
 
 	private Sprite[] sprites;
 	public GameObject optionsMenu;
+	
+	public Text scoreLabel;
+	private int score = 1;
+
+	private AudioSource themeMusic;
 
 	void Awake()
 	{
@@ -50,7 +57,9 @@ public class GameManager : MonoBehaviour
 		DontDestroyOnLoad(gameObject);
 		InitGame();
 		sprites = Resources.LoadAll<Sprite>("PlayerSprites");
-		powerUps = new List<GameObject>();
+
+		AudioSource[] audioSources = GetComponents<AudioSource>();
+		themeMusic = audioSources[0];
 	}
 
 	void Update()
@@ -77,6 +86,13 @@ public class GameManager : MonoBehaviour
 		SpawnFood();
 	}
 
+	// triggers when player makes first move
+	public void GameStarted()
+	{
+		PlayMusic();
+		Invoke("SpawnPowerUp", Random.Range(5f, 10f));
+	}
+
 	public void SpawnFood()
 	{
 		float x = (int)Random.Range(1, gameSize);
@@ -88,7 +104,13 @@ public class GameManager : MonoBehaviour
 		food = Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity);
 	}
 
-	public void GameOver()
+	public void PlayerAteFood()
+	{
+		scoreLabel.text = "" + (++score);
+		SpawnFood();
+	}
+
+	public void ShowOptionsMenu()
 	{
 		optionsMenu.SetActive(true);
 	}
@@ -101,18 +123,31 @@ public class GameManager : MonoBehaviour
 		CreatePlayer();
 		SpawnFood();
 
-		InvokeRepeating("SpawnPowerUp", 5, 10);
+		Invoke("SpawnPowerUp", Random.Range(5f, 10f));
 	}
 
 	void SpawnPowerUp()
 	{
-		float x = (int)Random.Range(1, gameSize);
-		float y = (int)Random.Range(1, gameSize);
+		if (powerUp == null)
+		{
+			float x = (int)Random.Range(1, gameSize);
+			float y = (int)Random.Range(1, gameSize);
 
-		x = mostLeft + x * gridItemSize;
-		y = mostBottom + y * gridItemSize;
+			x = mostLeft + x * gridItemSize;
+			y = mostBottom + y * gridItemSize;
 
-		GameObject powerUp = Instantiate(brzePrefab, new Vector2(x, y), Quaternion.identity);
+			powerUp = Instantiate(boljePrefab, new Vector2(x, y), Quaternion.identity);
+			Invoke("DestroyPowerUp", 5);
+		}
+	}
+
+	void DestroyPowerUp()
+	{
+		if (powerUp != null)
+		{
+			Destroy(powerUp);
+		}
+		Invoke("SpawnPowerUp", Random.Range(5f, 10f));
 	}
 
 	void CalculateSizes() {
@@ -162,5 +197,27 @@ public class GameManager : MonoBehaviour
 
 	void CreatePlayer() {
 		player = Instantiate(playerPrefab, new Vector2((mostRight + mostLeft) / 2, (mostTop + mostBottom) / 2), Quaternion.identity);
+	}
+
+	public void PlayerDied()
+	{
+		StopMusic();
+		ShowOptionsMenu();
+		CancelInvoke();
+	}
+
+	public void PlayMusic()
+	{
+		themeMusic.Play();
+	}
+
+	public void StopMusic()
+	{
+		themeMusic.Stop();
+	}
+
+	public void ShowTroll()
+	{
+		trollPrefab.SendMessage("StartAnimation");
 	}
 }
