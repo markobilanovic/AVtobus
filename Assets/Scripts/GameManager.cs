@@ -78,6 +78,8 @@ public class GameManager : MonoBehaviour
 
 	public void Reset()
 	{
+		score = 1;
+		scoreLabel.text = "" + score;
 		optionsMenu.SetActive(false);
 		player.SendMessage("DestroyPlayer");
 		Destroy(food);
