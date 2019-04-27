@@ -22,7 +22,7 @@ public class InputHandler : MonoBehaviour
 
 	public void OnButtonRight()
 	{
-		GameManager.Instance.player.SendMessage("SetDirection", Vector2.up);
+		GameManager.Instance.player.SendMessage("SetDirection", Vector2.right);
 	}
 
 	public void OnPlayAgain()

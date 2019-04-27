@@ -13,10 +13,13 @@ public class GameManager : MonoBehaviour
 	public GameObject playerPrefab;
 	public GameObject tailPrefab;
 	public GameObject foodPrefab;
+	public GameObject brzePrefab;
+	public GameObject jacePrefab;
+	public GameObject boljePrefab;
 
 	public float gridItemSize;
 
-	private int gameSize = 17;
+	private int gameSize = 13;
 	private int marginLeftSize = 1;
 	private int marginTopSize = 2;
 	private float screenWidth;
@@ -30,6 +33,8 @@ public class GameManager : MonoBehaviour
 
 	public GameObject player;
 	private GameObject food;
+
+	private List<GameObject> powerUps;
 
 	private Sprite[] sprites;
 	public GameObject optionsMenu;
@@ -45,23 +50,69 @@ public class GameManager : MonoBehaviour
 		DontDestroyOnLoad(gameObject);
 		InitGame();
 		sprites = Resources.LoadAll<Sprite>("PlayerSprites");
-	}
-
-	void InitGame() {
-		CalculateSizes();
-		ScalePrefabs();
-		CreateWalls();
-		CreatePlayer();
-		SpawnFood();
+		powerUps = new List<GameObject>();
 	}
 
 	void Update()
 	{
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Application.Quit();
+		}
+
 		if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.DownArrow) ||
 			Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.UpArrow))
 		{
 			player.SendMessage("StartMoving");
 		}
+	}
+
+	public void Reset()
+	{
+		optionsMenu.SetActive(false);
+		player.SendMessage("DestroyPlayer");
+		Destroy(food);
+
+		CreatePlayer();
+		SpawnFood();
+	}
+
+	public void SpawnFood()
+	{
+		float x = (int)Random.Range(1, gameSize);
+		float y = (int)Random.Range(1, gameSize);
+
+		x = mostLeft + x * gridItemSize;
+		y = mostBottom + y * gridItemSize;
+
+		food = Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity);
+	}
+
+	public void GameOver()
+	{
+		optionsMenu.SetActive(true);
+	}
+
+	void InitGame()
+	{
+		CalculateSizes();
+		ScalePrefabs();
+		CreateWalls();
+		CreatePlayer();
+		SpawnFood();
+
+		InvokeRepeating("SpawnPowerUp", 5, 10);
+	}
+
+	void SpawnPowerUp()
+	{
+		float x = (int)Random.Range(1, gameSize);
+		float y = (int)Random.Range(1, gameSize);
+
+		x = mostLeft + x * gridItemSize;
+		y = mostBottom + y * gridItemSize;
+
+		GameObject powerUp = Instantiate(brzePrefab, new Vector2(x, y), Quaternion.identity);
 	}
 
 	void CalculateSizes() {
@@ -89,6 +140,9 @@ public class GameManager : MonoBehaviour
 		playerPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		foodPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		tailPrefab.transform.localScale = new Vector3(gridItemSize * 0.7f, gridItemSize * 0.7f, 0);
+		brzePrefab.transform.localScale = new Vector3(gridItemSize * 0.7f, gridItemSize * 0.7f, 0);
+		boljePrefab.transform.localScale = new Vector3(gridItemSize * 0.7f, gridItemSize * 0.7f, 0);
+		jacePrefab.transform.localScale = new Vector3(gridItemSize * 0.7f, gridItemSize * 0.7f, 0);
 	}
 
 	void CreateWalls()
@@ -108,30 +162,5 @@ public class GameManager : MonoBehaviour
 
 	void CreatePlayer() {
 		player = Instantiate(playerPrefab, new Vector2((mostRight + mostLeft) / 2, (mostTop + mostBottom) / 2), Quaternion.identity);
-	}
-
-	public void SpawnFood() {
-		float x = (int)Random.Range(1, gameSize);
-		float y = (int)Random.Range(1, gameSize);
-
-		x = mostLeft + x * gridItemSize;
-		y = mostBottom + y * gridItemSize;
-
-		food = Instantiate(foodPrefab, new Vector2(x, y), Quaternion.identity);
-	}
-
-	public void GameOver() {
-		optionsMenu.SetActive(true);
-	}
-
-	public void Reset()
-	{
-		optionsMenu.SetActive(false);
-		player.SendMessage("DestroyPlayer");
-		Destroy(player);
-		Destroy(food);
-
-		CreatePlayer();
-		SpawnFood();
 	}
 }
