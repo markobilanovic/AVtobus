@@ -5,23 +5,21 @@ using System.Linq;
 
 public class Player : MonoBehaviour {
 
-	bool gameStarted = false;
-
-	bool ate = false;
-
-	bool isDead = false;
-
 	public GameObject tailPrefab;
+
+	bool gameStarted = false;
+	bool ate = false;
+	bool isDead = false;
 
 	AudioSource crashSound;
 	AudioSource biteSound;
 
-	public Vector2 direction;
-	float speed = 1;
-	float playerScale = 1;
-
+	Vector2 direction;
 	List<Transform> tail = new List<Transform>();
 	List<GameObject> tailObjects = new List<GameObject>();
+	float speed = 0.175f;
+	float speedFactor = 0.007f;
+	float playerScale = 1;
 
 	void Start () {
 		AudioSource[] audioSources = GetComponents<AudioSource>();
@@ -41,14 +39,15 @@ public class Player : MonoBehaviour {
 		{
 			gameStarted = true;
 			GameManager.Instance.GameStarted();
-			InvokeRepeating("Move", 0, 0.2f);
+			InvokeRepeating("Move", 0, speed);
 		}
 	}
 
-	public void ChangeSpeed(float speed)
+	public void SpeedUp()
 	{
 		CancelInvoke("Move");
-
+		speed -= speedFactor;
+		InvokeRepeating("Move", speed, speed);
 	}
 
 	// todo: delete - only for debugging
@@ -90,6 +89,12 @@ public class Player : MonoBehaviour {
 			tail.Insert(0, g.transform);
 			tailObjects.Insert(0, g);
 			ate = false;
+
+			// speed up
+			if (tail.Count % 3 == 0)
+			{
+				SpeedUp();
+			}
 		}
 		else if (tail.Count > 0)
 		{
@@ -131,11 +136,13 @@ public class Player : MonoBehaviour {
 		{
 			Destroy(coll.gameObject);
 			CancelInvoke("Move");
-			InvokeRepeating("Move", 0, 0.1f);
+			InvokeRepeating("Move", 0, speed - 0.03f);
+			Invoke("StopSpeedPowerUp", 4);
 		}
 		else if (coll.name.StartsWith("Jace"))
 		{
-
+			Destroy(coll.gameObject);
+			Debug.Log("JACE");
 		}
 		else if (coll.name.StartsWith("Bolje"))
 		{
@@ -146,6 +153,12 @@ public class Player : MonoBehaviour {
 		{
 			Die();
 		}
+	}
+
+	void StopSpeedPowerUp()
+	{
+		CancelInvoke("Move");
+		InvokeRepeating("Move", speed, speed);
 	}
 
 

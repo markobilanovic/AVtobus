@@ -6,7 +6,7 @@ public class Troll : MonoBehaviour
 {
 	private bool isStarted= false;
 	private bool maxPointReached = false;
-	private float startX = 32;
+	private float startX = 33;
 	private float endX = 20;
 
 	private AudioSource[] audioSources;

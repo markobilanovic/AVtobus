@@ -10,6 +10,11 @@ public class GameManager : MonoBehaviour
 
 	public Camera m_OrthographicCamera;
 
+	public GameObject leftWall;
+	public GameObject rightWall;
+	public GameObject upWall;
+	public GameObject downWall;
+
 	public GameObject brickPrefab;
 	public GameObject playerPrefab;
 	public GameObject tailPrefab;
@@ -23,7 +28,7 @@ public class GameManager : MonoBehaviour
 
 	private int gameSize = 13;
 	private int marginLeftSize = 1;
-	private int marginTopSize = 2;
+	private int marginTopSize = 1;
 	private float screenWidth;
 	private float screenHeight;
 	private float halfBrickSize;
@@ -40,7 +45,7 @@ public class GameManager : MonoBehaviour
 
 	private Sprite[] sprites;
 	public GameObject optionsMenu;
-	
+
 	public Text scoreLabel;
 	private int score = 1;
 
@@ -58,8 +63,7 @@ public class GameManager : MonoBehaviour
 		InitGame();
 		sprites = Resources.LoadAll<Sprite>("PlayerSprites");
 
-		AudioSource[] audioSources = GetComponents<AudioSource>();
-		themeMusic = audioSources[0];
+
 	}
 
 	void Update()
@@ -81,6 +85,7 @@ public class GameManager : MonoBehaviour
 		score = 1;
 		scoreLabel.text = "" + score;
 		optionsMenu.SetActive(false);
+		DestroyPowerUp();
 		player.SendMessage("DestroyPlayer");
 		Destroy(food);
 
@@ -119,13 +124,18 @@ public class GameManager : MonoBehaviour
 
 	void InitGame()
 	{
+		LoadAudio();
 		CalculateSizes();
 		ScalePrefabs();
 		CreateWalls();
 		CreatePlayer();
 		SpawnFood();
+	}
 
-		Invoke("SpawnPowerUp", Random.Range(5f, 10f));
+	void LoadAudio()
+	{
+		AudioSource[] audioSources = GetComponents<AudioSource>();
+		themeMusic = audioSources[0];
 	}
 
 	void SpawnPowerUp()
@@ -138,8 +148,20 @@ public class GameManager : MonoBehaviour
 			x = mostLeft + x * gridItemSize;
 			y = mostBottom + y * gridItemSize;
 
-			powerUp = Instantiate(boljePrefab, new Vector2(x, y), Quaternion.identity);
-			Invoke("DestroyPowerUp", 5);
+			int random = Random.Range(0, 3) % 3;
+
+			GameObject powerUp;
+			if (random == 0) {
+				powerUp = brzePrefab;
+			} else if (random == 1) {
+				powerUp = jacePrefab;
+			} else {
+				powerUp = boljePrefab;
+			}
+			 
+
+			powerUp = Instantiate(powerUp, new Vector2(x, y), Quaternion.identity);
+			Invoke("DestroyPowerUp", 4);
 		}
 	}
 
@@ -161,10 +183,10 @@ public class GameManager : MonoBehaviour
 			screenWidth = rUCorner.x * 2;
 			screenHeight = rUCorner.y * 2;
 
-			gridItemSize = screenWidth / (gameSize + marginLeftSize * 2);
+			gridItemSize = (float)System.Math.Floor(screenWidth / gameSize);
 			halfBrickSize = gridItemSize / 2;
 
-			mostRight = (gameSize + marginLeftSize) / 2 * gridItemSize;
+			mostRight = (gameSize / 2 + 1) * gridItemSize;
 			mostLeft = -mostRight;
 
 			mostTop = rUCorner.y - halfBrickSize - gridItemSize * marginTopSize;
@@ -174,6 +196,10 @@ public class GameManager : MonoBehaviour
 
 	void ScalePrefabs() {
 		brickPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		upWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		downWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		leftWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		rightWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		playerPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		foodPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		tailPrefab.transform.localScale = new Vector3(gridItemSize * 0.7f, gridItemSize * 0.7f, 0);
@@ -184,16 +210,20 @@ public class GameManager : MonoBehaviour
 
 	void CreateWalls()
 	{
-		for (float x = mostLeft; x <= mostRight + 1; x += gridItemSize) // +1 -> weird bug where == is not good
+		for (float x = 0; x < mostRight; x += gridItemSize)
 		{
-			Instantiate(brickPrefab, new Vector2(x, mostTop), Quaternion.identity);
-			Instantiate(brickPrefab, new Vector2(x, mostBottom), Quaternion.identity);
+			Debug.Log("x: " + x);
+			Instantiate(upWall, new Vector2(x, mostTop), Quaternion.identity);
+			Instantiate(downWall, new Vector2(x, mostBottom), Quaternion.identity);
+
+			Instantiate(upWall, new Vector2(-x, mostTop), Quaternion.identity);
+			Instantiate(downWall, new Vector2(-x, mostBottom), Quaternion.identity);
 		}
 
-		for (float y = mostTop; y >= mostBottom; y -= gridItemSize)
+		for (float y = mostTop - gridItemSize; y >= mostTop - (gridItemSize * gameSize); y -= gridItemSize)
 		{
-			Instantiate(brickPrefab, new Vector2(mostLeft, y), Quaternion.identity);
-			Instantiate(brickPrefab, new Vector2(mostRight, y), Quaternion.identity);
+			Instantiate(leftWall, new Vector2(mostLeft, y), Quaternion.identity);
+			Instantiate(rightWall, new Vector2(mostRight, y), Quaternion.identity);
 		}
 	}
 
