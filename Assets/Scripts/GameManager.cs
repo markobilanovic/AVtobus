@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
 
 	public float gridItemSize;
 
-	private int gameSize = 13;
+	private int gameSize = 11;
 	private int marginLeftSize = 1;
 	private int marginTopSize = 1;
 	private float screenWidth;
@@ -43,13 +43,15 @@ public class GameManager : MonoBehaviour
 
 	private GameObject powerUp = null;
 
-	private Sprite[] sprites;
+	private Sprite[] playerSprites;
 	public GameObject optionsMenu;
 
 	public Text scoreLabel;
 	private int score = 1;
 
 	private AudioSource themeMusic;
+	public GameObject volumeIcon;
+	private Sprite[] soundSprites;
 
 	void Awake()
 	{
@@ -61,7 +63,8 @@ public class GameManager : MonoBehaviour
 
 		DontDestroyOnLoad(gameObject);
 		InitGame();
-		sprites = Resources.LoadAll<Sprite>("PlayerSprites");
+		playerSprites = Resources.LoadAll<Sprite>("PlayerSprites");
+		soundSprites = Resources.LoadAll<Sprite>("HUD");
 
 
 	}
@@ -170,6 +173,7 @@ public class GameManager : MonoBehaviour
 		if (powerUp != null)
 		{
 			Destroy(powerUp);
+			powerUp = null;
 		}
 		Invoke("SpawnPowerUp", Random.Range(5f, 10f));
 	}
@@ -212,7 +216,6 @@ public class GameManager : MonoBehaviour
 	{
 		for (float x = 0; x < mostRight; x += gridItemSize)
 		{
-			Debug.Log("x: " + x);
 			Instantiate(upWall, new Vector2(x, mostTop), Quaternion.identity);
 			Instantiate(downWall, new Vector2(x, mostBottom), Quaternion.identity);
 
@@ -251,5 +254,18 @@ public class GameManager : MonoBehaviour
 	public void ShowTroll()
 	{
 		trollPrefab.SendMessage("StartAnimation");
+	}
+
+	public void OnTriggerSound()
+	{
+		// volumeIcon.GetComponent<Image>().sprite = ;
+		if (themeMusic.isPlaying)
+		{
+			themeMusic.Stop();
+			volumeIcon.GetComponent<Image>().sprite = soundSprites[1];
+		} else {
+			themeMusic.Play();
+			volumeIcon.GetComponent<Image>().sprite = soundSprites[0];
+		}
 	}
 }

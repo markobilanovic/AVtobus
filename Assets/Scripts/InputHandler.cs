@@ -30,6 +30,11 @@ public class InputHandler : MonoBehaviour
 		GameManager.Instance.Reset();
 	}
 
+	public void OnTriggerSound()
+	{
+		GameManager.Instance.OnTriggerSound();
+	}
+
 	public void Exit()
 	{
 		Application.Quit();

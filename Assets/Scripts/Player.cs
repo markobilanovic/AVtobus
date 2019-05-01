@@ -135,14 +135,15 @@ public class Player : MonoBehaviour {
 		else if (coll.name.StartsWith("Brze"))
 		{
 			Destroy(coll.gameObject);
-			CancelInvoke("Move");
-			InvokeRepeating("Move", 0, speed - 0.03f);
-			Invoke("StopSpeedPowerUp", 4);
+			//CancelInvoke("Move");
+			//InvokeRepeating("Move", 0, speed - 0.03f);
+			//Invoke("StopSpeedPowerUp", 4);
+			GameManager.Instance.ShowTroll();
 		}
 		else if (coll.name.StartsWith("Jace"))
 		{
 			Destroy(coll.gameObject);
-			Debug.Log("JACE");
+			GameManager.Instance.ShowTroll();
 		}
 		else if (coll.name.StartsWith("Bolje"))
 		{
