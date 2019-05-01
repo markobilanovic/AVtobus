@@ -47,11 +47,14 @@ public class GameManager : MonoBehaviour
 	public GameObject optionsMenu;
 
 	public Text scoreLabel;
+	public Text finalScoreLabel;
 	private int score = 1;
 
 	private AudioSource themeMusic;
 	public GameObject volumeIcon;
 	private Sprite[] soundSprites;
+
+	private AudioSource[] audioSources;
 
 	void Awake()
 	{
@@ -87,6 +90,7 @@ public class GameManager : MonoBehaviour
 	{
 		score = 1;
 		scoreLabel.text = "" + score;
+		finalScoreLabel.text = "" + score;
 		optionsMenu.SetActive(false);
 		DestroyPowerUp();
 		player.SendMessage("DestroyPlayer");
@@ -117,6 +121,7 @@ public class GameManager : MonoBehaviour
 	public void PlayerAteFood()
 	{
 		scoreLabel.text = "" + (++score);
+		finalScoreLabel.text = "" + (score);
 		SpawnFood();
 	}
 
@@ -137,7 +142,7 @@ public class GameManager : MonoBehaviour
 
 	void LoadAudio()
 	{
-		AudioSource[] audioSources = GetComponents<AudioSource>();
+		audioSources = GetComponents<AudioSource>();
 		themeMusic = audioSources[0];
 	}
 
@@ -239,6 +244,8 @@ public class GameManager : MonoBehaviour
 		StopMusic();
 		ShowOptionsMenu();
 		CancelInvoke();
+		AudioSource randomAudio = audioSources[Random.Range(1, audioSources.Length)];
+		randomAudio.Play();
 	}
 
 	public void PlayMusic()

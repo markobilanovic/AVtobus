@@ -164,7 +164,7 @@ public class Player : MonoBehaviour {
 
 
 	void Die() {
-		crashSound.Play();
+		//crashSound.Play();
 		isDead = true;
 		gameStarted = false;
 		direction = new Vector2(0, 0);
