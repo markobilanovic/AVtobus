@@ -7,22 +7,22 @@ public class InputHandler : MonoBehaviour
 {
 	public void OnButtonUp()
 	{
-		GameManager.Instance.player.SendMessage("SetDirection", Vector2.up);
+		GameManager.Instance.player.SendMessage("SetDirection", Vector3.up);
 	}
 
 	public void OnButtonDown()
 	{
-		GameManager.Instance.player.SendMessage("SetDirection", Vector2.down);
+		GameManager.Instance.player.SendMessage("SetDirection", Vector3.down);
 	}
 
 	public void OnButtonLeft()
 	{
-		GameManager.Instance.player.SendMessage("SetDirection", Vector2.left);
+		GameManager.Instance.player.SendMessage("SetDirection", Vector3.left);
 	}
 
 	public void OnButtonRight()
 	{
-		GameManager.Instance.player.SendMessage("SetDirection", Vector2.right);
+		GameManager.Instance.player.SendMessage("SetDirection", Vector3.right);
 	}
 
 	public void OnPlayAgain()

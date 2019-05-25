@@ -4,13 +4,32 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+public class Point
+{
+	public float X;
+	public float Y;
+
+	public Point(float X, float Y)
+	{
+		this.X = X;
+		this.Y = Y;
+	}
+}
+
 public class GameManager : MonoBehaviour
 {
 	public static GameManager Instance;
-
 	public Camera m_OrthographicCamera;
 
-	public GameObject leftWall;
+	public Point[,] gameMatrix;
+	public float gridItemSize;
+
+	private int gameSize = 11;
+	public List<float> xPoints;
+	public List<float> yPoints;
+
+
+	public GameObject wallPrefab;
 	public GameObject rightWall;
 	public GameObject upWall;
 	public GameObject downWall;
@@ -24,19 +43,16 @@ public class GameManager : MonoBehaviour
 	public GameObject boljePrefab;
 	public GameObject trollPrefab;
 
-	public float gridItemSize;
-
-	private int gameSize = 11;
 	private int marginLeftSize = 1;
 	private int marginTopSize = 1;
-	private float screenWidth;
-	private float screenHeight;
 	private float halfBrickSize;
 
 	private float mostLeft;
 	private float mostRight;
 	private float mostTop;
 	private float mostBottom;
+	private float centerX;
+	private float centerY;
 
 	public GameObject player;
 	private GameObject food;
@@ -82,7 +98,12 @@ public class GameManager : MonoBehaviour
 		if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.DownArrow) ||
 			Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.UpArrow))
 		{
-			player.SendMessage("StartMoving");
+
+			player.SendMessage("SetDirection",
+				Input.GetKey(KeyCode.RightArrow) ? Vector3.right :
+				Input.GetKey(KeyCode.DownArrow) ? Vector3.down :
+				Input.GetKey(KeyCode.LeftArrow) ? Vector3.left :
+				Input.GetKey(KeyCode.UpArrow) ? Vector3.up : Vector3.zero);
 		}
 	}
 
@@ -189,17 +210,37 @@ public class GameManager : MonoBehaviour
 			Vector2 lDCorner = m_OrthographicCamera.ViewportToWorldPoint(new Vector3(0, 0f, m_OrthographicCamera.nearClipPlane));
 			Vector2 rUCorner = m_OrthographicCamera.ViewportToWorldPoint(new Vector3(1f, 1f, m_OrthographicCamera.nearClipPlane));
 
-			screenWidth = rUCorner.x * 2;
-			screenHeight = rUCorner.y * 2;
+			float screenWidth = rUCorner.x * 2;
+			float screenHeight = rUCorner.y * 2;
+			float gameScreenHeight = screenHeight * 0.6f;
 
-			gridItemSize = (float)System.Math.Floor(screenWidth / gameSize);
+			centerX = 0;
+			centerY = screenHeight * 0.15f;
+
+			float shorterSide = screenWidth < gameScreenHeight ? screenWidth : gameScreenHeight;
+			gridItemSize = (float)System.Math.Floor(shorterSide / gameSize);
 			halfBrickSize = gridItemSize / 2;
 
-			mostRight = (gameSize / 2 + 1) * gridItemSize;
-			mostLeft = -mostRight;
+			float halfGameSize = (gridItemSize / 2 +
+								(gridItemSize * ((gameSize - 1) / 2)));
+			float leftUpCornerX = centerX - halfGameSize + gridItemSize / 2;
+			float leftUpCornerY = centerY - halfGameSize + gridItemSize / 2;
 
-			mostTop = rUCorner.y - halfBrickSize - gridItemSize * marginTopSize;
-			mostBottom = mostTop - gridItemSize * (gameSize + 1);
+
+			// creating matrix with field center coordinates
+			gameMatrix = new Point[gameSize, gameSize];
+			for (int y = 0; y < gameSize; y++) {
+				for (int x = 0; x < gameSize; x++)
+				{
+					gameMatrix[x, y] = new Point(leftUpCornerX + gridItemSize * x,
+											 leftUpCornerY + gridItemSize * y);
+				}
+			}
+
+			mostRight = ((gameSize - 1) / 2) * gridItemSize;
+			mostLeft = -mostRight;
+			mostTop = centerY + ((gameSize - 1) / 2) * gridItemSize;
+			mostBottom = centerY - ((gameSize - 1) / 2) * gridItemSize;
 		}
 	}
 
@@ -207,7 +248,7 @@ public class GameManager : MonoBehaviour
 		brickPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		upWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		downWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
-		leftWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
+		wallPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		rightWall.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		playerPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
 		foodPrefab.transform.localScale = new Vector3(gridItemSize, gridItemSize, 0);
@@ -219,20 +260,17 @@ public class GameManager : MonoBehaviour
 
 	void CreateWalls()
 	{
-		for (float x = 0; x < mostRight; x += gridItemSize)
+		for (int x = 0; x < gameSize; x++)
 		{
-			Instantiate(upWall, new Vector2(x, mostTop), Quaternion.identity);
-			Instantiate(downWall, new Vector2(x, mostBottom), Quaternion.identity);
-
-			Instantiate(upWall, new Vector2(-x, mostTop), Quaternion.identity);
-			Instantiate(downWall, new Vector2(-x, mostBottom), Quaternion.identity);
+			Instantiate(wallPrefab, new Vector2(gameMatrix[x, 0].X, gameMatrix[x, 0].Y), Quaternion.identity);
+			Instantiate(wallPrefab, new Vector2(gameMatrix[x, gameSize-1].X, gameMatrix[x, gameSize-1].Y), Quaternion.identity);
+		}
+		for (int y = 1; y < gameSize - 1; y++)
+		{
+			Instantiate(wallPrefab, new Vector2(gameMatrix[0, y].X, gameMatrix[0, y].Y), Quaternion.identity);
+			Instantiate(wallPrefab, new Vector2(gameMatrix[gameSize - 1, y].X, gameMatrix[gameSize - 1, y].Y), Quaternion.identity);
 		}
 
-		for (float y = mostTop - gridItemSize; y >= mostTop - (gridItemSize * gameSize); y -= gridItemSize)
-		{
-			Instantiate(leftWall, new Vector2(mostLeft, y), Quaternion.identity);
-			Instantiate(rightWall, new Vector2(mostRight, y), Quaternion.identity);
-		}
 	}
 
 	void CreatePlayer() {

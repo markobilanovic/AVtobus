@@ -10,36 +10,30 @@ public class Player : MonoBehaviour {
 	bool gameStarted = false;
 	bool ate = false;
 	bool isDead = false;
+	bool wantsToTurn = false;
 
-	AudioSource crashSound;
 	AudioSource biteSound;
 
-	Vector2 direction;
+	Vector3 direction;
+	Vector3 nextDirection;
 	List<Transform> tail = new List<Transform>();
 	List<GameObject> tailObjects = new List<GameObject>();
 	float speed = 0.175f;
 	float speedFactor = 0.007f;
-	float playerScale = 1;
+	float movementSpeed = 5.0f;
+
+	float turnTrashhold;
 
 	void Start () {
 		AudioSource[] audioSources = GetComponents<AudioSource>();
-		crashSound = audioSources[0];
-		biteSound = audioSources[1];
+		biteSound = audioSources[0];
+		turnTrashhold = GameManager.Instance.gridItemSize / 3;
 	}
 
 	public float PlayerScale {
 		get
 		{
 			return GameManager.Instance.gridItemSize;
-		}
-	}
-
-	public void StartMoving() {
-		if(!gameStarted)
-		{
-			gameStarted = true;
-			GameManager.Instance.GameStarted();
-			InvokeRepeating("Move", 0, speed);
 		}
 	}
 
@@ -52,23 +46,33 @@ public class Player : MonoBehaviour {
 
 	// todo: delete - only for debugging
 	void Update () {
-		if (!isDead) {
+		if (!isDead && gameStarted) {
 			if (Input.GetKey (KeyCode.RightArrow))
 			{
-				SetDirection(Vector2.right);
+				SetDirection(Vector3.right);
 			}
 			else if (Input.GetKey(KeyCode.DownArrow))
 			{
-				SetDirection(Vector2.down);
+				SetDirection(Vector3.down);
 			}
 			else if (Input.GetKey(KeyCode.LeftArrow))
 			{
-				SetDirection(Vector2.left);
+				SetDirection(Vector3.left);
 			}
 			else if (Input.GetKey(KeyCode.UpArrow))
 			{
-				SetDirection(Vector2.up);
+				SetDirection(Vector3.up);
 			}
+
+			if (wantsToTurn)
+			{
+			}
+			else
+			{
+
+			}
+
+			transform.position += direction * Time.deltaTime * movementSpeed;
 		}
 	}
 
@@ -79,49 +83,58 @@ public class Player : MonoBehaviour {
 		Destroy(this.gameObject);
 	}
 
-	void Move() {
-		Vector2 v = transform.position;
-		transform.Translate(direction);
-
-		if (ate)
+	private bool DieIfGoBackward(Vector3 newDirection)
+	{
+		Vector3 dir = this.direction / PlayerScale;
+		if ((dir == Vector3.up && newDirection == Vector3.down) ||
+			(dir == Vector3.down && newDirection == Vector3.up) ||
+			(dir == Vector3.left && newDirection == Vector3.right) ||
+			(dir == Vector3.right && newDirection == Vector3.left))
 		{
-			GameObject g = (GameObject)Instantiate(tailPrefab, v, Quaternion.identity);
-			tail.Insert(0, g.transform);
-			tailObjects.Insert(0, g);
-			ate = false;
-
-			// speed up
-			if (tail.Count % 3 == 0)
-			{
-				SpeedUp();
-			}
-		}
-		else if (tail.Count > 0)
-		{
-			tail.Last().position = v;
-			tail.Insert(0, tail.Last());
-			tail.RemoveAt(tail.Count - 1);
+			Die();
+			return true;
+		} else {
+			return false;
 		}
 	}
 
-	public void SetDirection(Vector2 newDirection)
+	public void SetDirection(Vector3 newDirection)
 	{
-		if (!isDead)
-		{
-			Vector2 dir = this.direction / PlayerScale;
-			if ((dir == Vector2.up && newDirection == Vector2.down) ||
-				(dir == Vector2.down && newDirection == Vector2.up) ||
-				(dir == Vector2.left && newDirection == Vector2.right) ||
-				(dir == Vector2.right && newDirection == Vector2.left))
-			{
-				Die();
-			}
-			else
-			{
-				StartMoving();
-				this.direction = newDirection * PlayerScale;
-			}
+		if (isDead) {
+			return;
 		}
+
+		if (DieIfGoBackward(newDirection)) {
+			return;
+		}
+
+		if (!gameStarted) {
+			gameStarted = true;
+			GameManager.Instance.GameStarted();
+			this.direction = newDirection * PlayerScale;
+			return;
+		}
+
+		// todo: check if same direction
+
+		//if (wantsToTurn) {
+		//	if(canTurn()) {
+		//		// this.direction = newDirection * PlayerScale;
+		//	}
+		//}
+		
+		// check if within point treshold area for changing direction
+		float x = transform.position.x;
+		float y = transform.position.y;
+
+		float xx = x % PlayerScale;
+
+		nextDirection = newDirection;
+		wantsToTurn = true;
+
+		// todo: delete this when changed to new system
+		this.direction = newDirection * PlayerScale;
+
 	}
 
 	void OnTriggerEnter2D(Collider2D coll) {
@@ -164,7 +177,6 @@ public class Player : MonoBehaviour {
 
 
 	void Die() {
-		//crashSound.Play();
 		isDead = true;
 		gameStarted = false;
 		direction = new Vector2(0, 0);
